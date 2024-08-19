@@ -105,9 +105,9 @@ class DigitalOcean extends AbstractProvider
             if ($sshKey->status() != 201) {
                 throw new ServerProviderError('Failed to create SSH key on DigitalOcean');
             }
-            $sshKey = $sshKey->json('id');
+            $sshKeyId = $sshKey->json('id');
         } else {
-            $sshKey = $sshKey['id'];
+            $sshKeyId = $sshKey['id'];
         }
 
         $create = Http::withToken($this->server->serverProvider->credentials['token'])
@@ -119,7 +119,7 @@ class DigitalOcean extends AbstractProvider
                 'backups' => false,
                 'ipv6' => false,
                 'monitoring' => false,
-                'ssh_keys' => [$sshKey->json('ssh_key')['id']],
+                'ssh_keys' => [$sshKeyId],
             ]);
         if ($create->status() != 202) {
             $msg = __('Failed to create server on DigitalOcean');
