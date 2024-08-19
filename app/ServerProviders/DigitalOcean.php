@@ -102,12 +102,11 @@ class DigitalOcean extends AbstractProvider
                 'public_key' => $this->server->sshKey()['public_key'],
                     'name' => str($this->server->name)->slug() . '-' . $this->server->id . '-' . $this->server->project_id,
             ]);
-            dd($sshKey->body(),$sshKey->status());
             if ($sshKey->status() != 201) {
                 throw new ServerProviderError('Failed to create SSH key on DigitalOcean');
             }
         }
-
+dd($sshKey);
         $create = Http::withToken($this->server->serverProvider->credentials['token'])
             ->post($this->apiUrl.'/droplets', [
                 'name' => str($this->server->name)->slug(),
