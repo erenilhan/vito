@@ -103,6 +103,7 @@ class DigitalOcean extends AbstractProvider
                     'name' => str($this->server->name)->slug() . '-' . $this->server->id . '-' . $this->server->project_id,
             ]);
             if ($sshKey->status() != 201) {
+                dd($sshKey->json());
                 throw new ServerProviderError('Failed to create SSH key on DigitalOcean');
             }
             $sshKeyId = $sshKey->json('id');
