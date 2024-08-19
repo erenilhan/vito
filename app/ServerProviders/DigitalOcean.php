@@ -121,7 +121,16 @@ class DigitalOcean extends AbstractProvider
                 'monitoring' => false,
                 'ssh_keys' => [$sshKeyId],
             ]);
-        dd($create->json());
+        dd($create->body(),[
+            'name' => str($this->server->name)->slug(),
+            'region' => $this->server->provider_data['region'],
+            'size' => $this->server->provider_data['plan'],
+            'image' => config('serverproviders.digitalocean.images')[$this->server->os],
+            'backups' => false,
+            'ipv6' => false,
+            'monitoring' => false,
+            'ssh_keys' => [$sshKeyId],
+        ]);
         if ($create->status() != 202) {
             $msg = __('Failed to create server on DigitalOcean');
             Log::error('Failed to create server on DigitalOcean', $create->json());
