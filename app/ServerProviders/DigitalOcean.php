@@ -94,7 +94,6 @@ class DigitalOcean extends AbstractProvider
         $collectedKeys = collect($keys->json('ssh_keys'));
 
         $sshKey = $collectedKeys->where('public_key', $this->server->sshKey()['public_key'])
-            ->where('name', str($this->server->name)->slug() . '-' . $this->server->id . '-' . $this->server->project_id)
             ->first();
 
         if (!$sshKey) {
