@@ -600,7 +600,7 @@ return [
             ],
             [
                 'title' => 'Frankfurt 1',
-                'value' => 'default-fra1',
+                'value' => 'fra1',
             ],
             [
                 'title' => 'Toronto 1',
