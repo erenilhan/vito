@@ -15,6 +15,7 @@ use App\ValidationRules\RestrictedIPAddressesRule;
 use Exception;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -84,6 +85,18 @@ class CreateServer
             return $server;
         } catch (Exception $e) {
             $server->provider()->delete();
+            $server->services()->delete();
+            $server->databases()->delete();
+            $server->firewallRules()->delete();
+            $server->queues()->delete();
+            $server->daemons()->delete();
+            $server->sshKeys()->detach();
+            if (File::exists($server->sshKey()['public_key_path'])) {
+                File::delete($server->sshKey()['public_key_path']);
+            }
+            if (File::exists($server->sshKey()['private_key_path'])) {
+                File::delete($server->sshKey()['private_key_path']);
+            }
             DB::rollBack();
             if ($e instanceof ServerProviderError) {
                 throw ValidationException::withMessages([

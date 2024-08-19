@@ -113,6 +113,7 @@ class Server extends AbstractModel
         parent::boot();
 
         static::deleting(function (Server $server) {
+
             $server->sites()->each(function (Site $site) {
                 $site->delete();
             });
