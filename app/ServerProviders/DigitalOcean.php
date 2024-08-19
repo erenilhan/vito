@@ -94,14 +94,14 @@ class DigitalOcean extends AbstractProvider
         $collectedKeys = collect($keys->json('ssh_keys'));
 
         $sshKey = $collectedKeys->where('public_key', $this->server->sshKey()['public_key'])
-            ->where('name', str($this->server->name)->slug() . '-' . $this->server->id)
+            ->where('name', str($this->server->name)->slug() . '-' . $this->server->id . '-' . $this->server->project_id
             ->first();
 
         if (!$sshKey) {
             $sshKey = Http::withToken($this->server->serverProvider->credentials['token'])
                 ->post($this->apiUrl . '/account/keys', [
                 'public_key' => $this->server->sshKey()['public_key'],
-                    'name' => str($this->server->name)->slug() . '-' . $this->server->id . '-' . now()->timestamp,
+                    'name' => str($this->server->name)->slug() . '-' . $this->server->id . '-' . $this->server->project_id,
             ]);
             if ($sshKey->status() != 201) {
                 throw new ServerProviderError('Failed to create SSH key on DigitalOcean');
