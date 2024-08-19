@@ -7,6 +7,7 @@ use App\Exceptions\ServerProviderError;
 use App\Facades\Notifier;
 use App\Notifications\FailedToDeleteServerFromProvider;
 use Exception;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -82,18 +83,29 @@ class DigitalOcean extends AbstractProvider
 
     /**
      * @throws ServerProviderError
+     * @throws ConnectionException
      */
     public function create(): void
     {
         $this->generateKeyPair();
 
-        $createSshKey = Http::withToken($this->server->serverProvider->credentials['token'])
-            ->post($this->apiUrl.'/account/keys', [
+        $keys = Http::withToken($this->server->serverProvider->credentials['token'])
+            ->get($this->apiUrl . '/account/keys');
+        $collectedKeys = collect($keys->json('ssh_keys'));
+
+        $sshKey = $collectedKeys->where('public_key', $this->server->sshKey()['public_key'])
+            ->where('name', str($this->server->name)->slug() . '-' . $this->server->id)
+            ->first();
+
+        if (!$sshKey) {
+            $sshKey = Http::withToken($this->server->serverProvider->credentials['token'])
+                ->post($this->apiUrl . '/account/keys', [
                 'public_key' => $this->server->sshKey()['public_key'],
-                'name' => str($this->server->name)->slug().'-'.$this->server->id,
+                    'name' => str($this->server->name)->slug() . '-' . $this->server->id . '-' . now()->timestamp,
             ]);
-        if ($createSshKey->status() != 201) {
-            throw new ServerProviderError('DigitalOcean SSH Key');
+            if ($sshKey->status() != 201) {
+                throw new ServerProviderError('Failed to create SSH key on DigitalOcean');
+            }
         }
 
         $create = Http::withToken($this->server->serverProvider->credentials['token'])
@@ -105,7 +117,7 @@ class DigitalOcean extends AbstractProvider
                 'backups' => false,
                 'ipv6' => false,
                 'monitoring' => false,
-                'ssh_keys' => [$createSshKey->json()['ssh_key']['id']],
+                'ssh_keys' => [$sshKey->json('ssh_key')['id']],
             ]);
         if ($create->status() != 202) {
             $msg = __('Failed to create server on DigitalOcean');
